@@ -1,0 +1,30 @@
+[project]
+name = "tower-defense-runner"
+version = "0.1.0"
+description = "A pygame prototype of an ad-style tower-defense runner."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "CC0-1.0"
+authors = [{ name = "SioComb" }]
+dependencies = [
+    "pygame>=2.6.1",
+]
+
+[project.scripts]
+tower-defense-runner = "tower_defense_runner.main:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
