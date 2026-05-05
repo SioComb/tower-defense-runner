@@ -47,7 +47,7 @@ class GameUI:
             screen.blit(surface, (x, 14))
             x += surface.get_width() + 34
 
-        instructions = "SPACE Pause/Resume   R Restart after Game Over   ESC Quit"
+        instructions = "A/Left Move Left   D/Right Move Right   SPACE Pause/Resume   R Restart   ESC Quit"
         hint = self.font_small.render(instructions, True, settings.MUTED_TEXT_COLOR)
         screen.blit(hint, (22, 49))
 

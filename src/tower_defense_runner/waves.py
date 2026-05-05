@@ -1,4 +1,4 @@
-"""Wave scaling and spawn scheduling."""
+"""Wave scaling and spawn scheduling for the lane shooter."""
 
 from __future__ import annotations
 
@@ -10,8 +10,10 @@ from tower_defense_runner import settings
 @dataclass(frozen=True)
 class WaveConfig:
     wave_number: int
+    duration: float
     normal_enemy_count: int
-    spawn_interval: float
+    enemy_spawn_interval: float
+    utility_spawn_interval: float
     enemy_hp: float
     enemy_speed: float
     enemy_reward: int
@@ -29,23 +31,26 @@ def build_wave_config(wave_number: int) -> WaveConfig:
     wave_index = max(0, wave_number - 1)
     is_boss_wave = wave_number % settings.BOSS_WAVE_INTERVAL == 0
     normal_count = settings.WAVE_BASE_ENEMY_COUNT + wave_index * settings.WAVE_ENEMY_COUNT_GROWTH
-    if is_boss_wave:
-        normal_count = max(6, normal_count - 5)
 
     return WaveConfig(
         wave_number=wave_number,
+        duration=settings.WAVE_DURATION,
         normal_enemy_count=normal_count,
-        spawn_interval=max(
+        enemy_spawn_interval=max(
             settings.WAVE_MIN_SPAWN_INTERVAL,
             settings.WAVE_BASE_SPAWN_INTERVAL - wave_index * 0.025,
         ),
-        enemy_hp=settings.ENEMY_BASE_HP + wave_index * 8.0,
-        enemy_speed=settings.ENEMY_BASE_SPEED + wave_index * 2.5,
+        utility_spawn_interval=max(
+            settings.UTILITY_MIN_SPAWN_INTERVAL,
+            settings.UTILITY_BASE_SPAWN_INTERVAL - wave_index * 0.12,
+        ),
+        enemy_hp=settings.ENEMY_BASE_HP + wave_index * 7.0,
+        enemy_speed=settings.ENEMY_BASE_SPEED + wave_index * 3.0,
         enemy_reward=settings.ENEMY_BASE_REWARD + wave_index * 2,
         is_boss_wave=is_boss_wave,
-        boss_hp=settings.BOSS_BASE_HP + wave_index * 85.0,
-        boss_speed=max(28.0, settings.BOSS_BASE_SPEED + wave_index * 1.2),
-        boss_reward=settings.BOSS_BASE_REWARD + wave_index * 45,
+        boss_hp=settings.BOSS_BASE_HP + wave_index * 95.0,
+        boss_speed=max(30.0, settings.BOSS_BASE_SPEED + wave_index * 1.0),
+        boss_reward=settings.BOSS_BASE_REWARD + wave_index * 50,
     )
 
 
@@ -56,33 +61,45 @@ class WaveManager:
     def __post_init__(self) -> None:
         self.config = build_wave_config(self.current_wave)
         self.elapsed = 0.0
-        self.spawn_timer = 0.4
+        self.enemy_timer = 0.45
+        self.utility_timer = 2.0
         self.normal_spawned = 0
         self.boss_spawned = False
 
     def update(self, dt: float) -> list[str]:
         self.elapsed += dt
-        self.spawn_timer -= dt
+        events: list[str] = []
 
-        spawn_kinds: list[str] = []
-        while self.spawn_timer <= 0.0 and not self.all_spawns_done():
-            spawn_kind = self._next_spawn_kind()
-            if spawn_kind is None:
-                break
-            spawn_kinds.append(spawn_kind)
-            self.spawn_timer += self.config.spawn_interval
-        return spawn_kinds
+        self.enemy_timer -= dt
+        while self.enemy_timer <= 0.0 and self.normal_spawned < self.config.normal_enemy_count:
+            events.append("enemy")
+            self.normal_spawned += 1
+            self.enemy_timer += self.config.enemy_spawn_interval
 
-    def should_advance(self, active_enemy_count: int) -> bool:
-        cleared = self.all_spawns_done() and active_enemy_count == 0
-        timed_out = self.elapsed >= settings.WAVE_TIME_LIMIT
-        return cleared or timed_out
+        self.utility_timer -= dt
+        while self.utility_timer <= 0.0 and self.elapsed < self.config.duration - 1.0:
+            events.append("utility")
+            self.utility_timer += self.config.utility_spawn_interval
+
+        if (
+            self.config.is_boss_wave
+            and not self.boss_spawned
+            and self.elapsed >= settings.BOSS_SPAWN_TIME
+        ):
+            events.append("boss")
+            self.boss_spawned = True
+
+        return events
+
+    def should_advance(self) -> bool:
+        return self.elapsed >= self.config.duration
 
     def advance_wave(self) -> WaveConfig:
         self.current_wave += 1
         self.config = build_wave_config(self.current_wave)
         self.elapsed = 0.0
-        self.spawn_timer = 0.5
+        self.enemy_timer = 0.45
+        self.utility_timer = 1.5
         self.normal_spawned = 0
         self.boss_spawned = False
         return self.config
@@ -92,20 +109,3 @@ class WaveManager:
             self.normal_spawned >= self.config.normal_enemy_count
             and (not self.config.is_boss_wave or self.boss_spawned)
         )
-
-    def _next_spawn_kind(self) -> str | None:
-        if self.config.is_boss_wave:
-            boss_trigger_count = max(1, self.config.normal_enemy_count // 2)
-            if not self.boss_spawned and self.normal_spawned >= boss_trigger_count:
-                self.boss_spawned = True
-                return "boss"
-
-        if self.normal_spawned < self.config.normal_enemy_count:
-            self.normal_spawned += 1
-            return "enemy"
-
-        if self.config.is_boss_wave and not self.boss_spawned:
-            self.boss_spawned = True
-            return "boss"
-
-        return None

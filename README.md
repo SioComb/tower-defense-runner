@@ -1,18 +1,23 @@
 # Tower Defense Runner
 
-大量の敵が決められた道を進み、プレイヤー側の兵士が自動射撃で敵・数字ゲート・武器コンテナを破壊していく、広告風のタワーディフェンスランナーゲームの pygame プロトタイプです。
+A pygame prototype of an ad-style lane shooting defense game.
 
-## スクリーンショット
+This is not a classic maze or route based tower defense game. Enemies, gates,
+weapon crates, and bosses move straight down from the top of the screen. The
+player moves the soldier squad left and right along the base area and lines up
+straight upward shots.
 
-画像はまだありません。
+## Screenshot
+
+No screenshot is included yet.
 
 ```text
 [ screenshot placeholder ]
 ```
 
-## セットアップ方法
+## Setup
 
-Python 3.11 以上、Windows 11、uv、venv を前提にしています。
+Python 3.11 or newer, Windows 11, uv, and a virtual environment are assumed.
 
 ```powershell
 uv venv
@@ -20,34 +25,39 @@ uv venv
 uv sync
 ```
 
-## 実行方法
+## Run
 
 ```powershell
 uv run python -m tower_defense_runner.main
 ```
 
-または:
+Or:
 
 ```powershell
 uv run tower-defense-runner
 ```
 
-## 操作方法
+## Controls
 
-- `SPACE`: 一時停止 / 再開
-- `R`: ゲームオーバー後にリスタート
-- `ESC`: 終了
+- `A` or `Left Arrow`: Move the soldier squad left
+- `D` or `Right Arrow`: Move the soldier squad right
+- `SPACE`: Pause / resume
+- `R`: Restart after game over
+- `ESC`: Quit
 
-## ゲーム概要
+## Game Overview
 
-- 敵は表示されたルートに沿って拠点へ進みます。
-- 兵士は自動で最も近い敵、ゲート、武器コンテナを撃ちます。
-- `+5`、`+10`、`x2` などのゲートを破壊すると兵士数が増えます。
-- 武器コンテナを破壊すると武器レベルが上がり、攻撃力、連射速度、弾速が強化されます。
-- 5 ウェーブごとに高 HP のボスが出現します。
-- 敵やボスが拠点に到達すると拠点 HP が減り、0 になるとゲームオーバーです。
+- The base is at the bottom of the battle lane.
+- Enemies move straight down and damage the base when they reach the base line.
+- Soldiers fire straight upward only. There is no auto aim and no homing.
+- Move the squad left and right to line up shots.
+- Gates such as `+5`, `+10`, and `x2` gain charge when hit by bullets.
+- A charged gate activates and increases the soldier count, then disappears.
+- Weapon crates lose HP when hit. Destroying one raises the weapon level.
+- Weapon levels improve bullet damage, bullet speed, and fire rate.
+- Every fifth wave spawns a large boss with high HP.
 
-## ディレクトリ構成
+## Directory Structure
 
 ```text
 tower_defense_runner/
@@ -69,17 +79,17 @@ tower_defense_runner/
    └─ test_basic.py
 ```
 
-## 今後追加したい機能
+## Future Ideas
 
-- 敵の種類追加
-- 武器の種類追加
-- ゲート効果の種類追加
-- ステージ追加
-- セーブデータ
-- サウンド
-- パーティクル演出
-- メニュー画面
-- スマホ風 UI
+- Additional enemy types
+- Additional weapon types
+- Additional gate effects
+- More stages
+- Save data
+- Sound
+- Particle effects
+- Menu screen
+- Mobile-style UI
 
 ## Credits
 

@@ -1,7 +1,7 @@
 [project]
 name = "tower-defense-runner"
 version = "0.1.0"
-description = "A pygame prototype of an ad-style tower-defense runner."
+description = "A pygame prototype of an ad-style lane shooting defense game."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "CC0-1.0"
